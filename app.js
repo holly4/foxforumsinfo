@@ -66,7 +66,7 @@ function FoxFeedScanner(feed) {
     title: now.toISOString(),
     date: now.toISOString(),
     description: "",
-    url: now.toISOString(),
+    url: "",
     hasComments: false
   });
 
