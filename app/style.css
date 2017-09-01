@@ -1,15 +1,33 @@
-#feeds {
+.site {
+    font-weight:bold;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+#stats {
+    font-weight:normal;
+    margin-left: 1em;
+}
+
+.tab {
     float: left;
-    width: 120px;
-    background: #F4F4F4;
-    border-right: 1px solid #ccc;
+    width: 150px;
     margin-right: 12px;
     margin-left: 0;    
 }
 
+#feeds button:first-child {
+    margin-bottom: 1em;    
+}
+
+#feeds {
+    margin-bottom: 2em;
+    border-right: 1px solid #ccc;
+}
+
 button {
     display: block;
-    background-color: inherit;
+    background: #F4F4F4;
     color: black;
     padding: 10px 10px;
     width: 100%;
@@ -43,7 +61,7 @@ div.tab button.active {
     border-left: none;
 }
 
-.tabcontent p {
+.title {
    font-weight:bold;
     margin-top: 1em;
     margin-bottom: 0;
@@ -51,7 +69,7 @@ div.tab button.active {
     margin-right: 0;   
 }
 
-.tabcontent p:first-child { 
+.date { 
     font-weight: normal;
 }
 

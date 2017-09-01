@@ -5,43 +5,53 @@ $(document).ready(function () {
     console.log("requesting... ");
 
     $.ajax({
-        url: "http://localhost:8080/stories",
+        url: "https://foxforumsinfo.herokuapp.com/stories",
         error: function (req, exception) {
             console.log(req.statusText);
         }
     }).then(function (data) {
-
-        $("#buttons").empty();
-
-        console.log("completed: " + data.length);
         parsed = JSON.parse(data);
         var keys = _.keys(parsed)
         let count = keys.length - 1;
-        let commented = 0;
         let unique = {};
+        let active = {};
+        
+        // add other buttons
+        {
+            _.each(_.keys(parsed), function (i) {
+                let button = $("<button/>");
+                button.text(i.replace(/_/g, ' '));
+                button.attr("class", 'tablinks');
+                button.click(function (event) {
+                    onComplete(event, parsed[i]);
+                });
+                button.appendTo($("#feeds"));
+                let commented = 0;
 
-        _.each(_.keys(parsed), function (i) {
-            var cat = parsed[i];
-            var button = $("<button/>");
-            button.text(i);
+                _.each(parsed[i], function (i) {
+                    unique[i.url] = i;
+                    if (i.hasComments) {
+                        commented++;
+                        active[i.url] = i;
+                    }
+                });
+
+                button.text(button.text() + " (" + commented + ")");
+            });
+        }
+
+        // set up all Active feeds button
+        {
+            let button = $("#feeds button").first();
             button.attr("class", 'tablinks');
+            button.text(button.text() + " (" + _.keys(active).length + ")");
+
             button.click(function (event) {
-                onComplete(event, cat);
-            });
-            button.appendTo($("#feeds"));
+                onComplete(event, active);
+            });            
+        }        
 
-            _.each(cat, function (i) {
-                unique[i.url] = i;
-            });
-        });
-
-        _.each(unique, function (i) {
-            if (i.hasComments) {
-                commented++;
-            }
-        });
-
-        $('#stats').text(_.keys(unique).length + " stories, " + commented + " with comments.");
+        $('#stats').text(_.keys(unique).length + " stories, " + _.keys(active).length + " with comments");
 
         $("button").first().click();
 
@@ -61,22 +71,26 @@ function onComplete(event, stories) {
 
     var div = $("<div class='tabcontent'></div>");
     $('#result').append(div);
+    var dateline = "";
 
-    let n = 0;
     _.each(sorted, function (item) {
-        if (n++ == 0 ) {
-            var title = $('<p class="title">(' + item.title + ')</p>'); 
+        if (item.url.length) {
+            var title = $('<p class="title">(' + item.title + ')</p>');
             div.append(title);
-        } else {
-            var title = $('<p class="title">' + item.title + '</p>'); 
-            div.append(title);
-            
+
             var line = $('<a>' + item.url + '</a>');
             line.css("color", item.hasComments ? 'blue' : 'red')
             line.attr('href', item.url);
-            div.append(line);
+            line.attr('target', '_blank');
+            div.append(line);            
+        } else {
+            dateline = $('<p class="date">(' + item.title + ')</p>');
         }
     });
+
+    if (dateline.length) {
+        div.append(dateline);
+    }
 
     // remove all buttons marked as active
     $(".active").removeClass("active");
