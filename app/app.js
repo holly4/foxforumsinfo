@@ -15,7 +15,7 @@ $(document).ready(function () {
         let count = keys.length - 1;
         let unique = {};
         let active = {};
-        
+
         // add other buttons
         {
             _.each(_.keys(parsed), function (i) {
@@ -48,19 +48,30 @@ $(document).ready(function () {
 
             button.click(function (event) {
                 onComplete(event, active);
-            });            
-        }        
+            });
+        }
 
         $('#stats').text(_.keys(unique).length + " stories, " + _.keys(active).length + " with comments");
 
-        $("button").first().click();
+        $("#openinnewtab").click(function() {
+            let openInNewTab = $("#openinnewtab").is(":checked");
+            let elems = $("#result").find("a");
+            if (openInNewTab) {
+                elems.attr('target', '_blank');
+            } else {
+                elems.removeAttr('target');
+            }
+        });
 
-        //onComplete(parsed[_.first(_.keys(parsed))]);
-    }).errr;
+        // set current view to first page
+        $("button").first().click();        
+    });
+
+
 });
 
 function onComplete(event, stories) {
-
+    let openInNewTab = $("#openinnewtab").is(":checked");
     $("#result").empty();
 
     var sorted = [];
@@ -81,8 +92,10 @@ function onComplete(event, stories) {
             var line = $('<a>' + item.url + '</a>');
             line.css("color", item.hasComments ? 'blue' : 'red')
             line.attr('href', item.url);
-            line.attr('target', '_blank');
-            div.append(line);            
+            if (openInNewTab) {
+                line.attr('target', '_blank');
+            }
+            div.append(line);
         } else {
             dateline = $('<p class="date">(' + item.title + ')</p>');
         }

@@ -1,11 +1,11 @@
-.site {
+.link {
     font-weight:bold;
-    margin-top: 1em;
-    margin-bottom: 1em;
 }
 
-#stats {
+.site, #stats {
     font-weight:normal;
+    margin-top: 1em;
+    margin-bottom: 1em;    
     margin-left: 1em;
 }
 
