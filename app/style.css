@@ -1,12 +1,37 @@
+body {
+    background: #F6F6F6;   
+    margin-left: 0;
+    padding-left: 0;   
+    width: 100%;
+}
+
 .link {
     font-weight:bold;
 }
 
-.site, #stats {
-    font-weight:normal;
-    margin-top: 1em;
-    margin-bottom: 1em;    
-    margin-left: 1em;
+.site {
+    margin: 1em;
+    width: 80%;
+}
+
+#stats {
+    padding-left: 4em; 
+}
+
+a {
+    text-decoration: none;
+}
+
+.title {
+    font-size: medium;
+}
+
+.date {
+    font-size: small;
+}
+
+.entry:last-of-type {
+    margin-bottom: 1em;
 }
 
 .tab {
@@ -69,7 +94,6 @@ div.tab button.active {
     margin-right: 0;   
 }
 
-.date { 
-    font-weight: normal;
+#openinnewtab {
+    margin-left: 5em;
 }
-

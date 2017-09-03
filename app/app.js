@@ -1,59 +1,68 @@
-$(document).ready(function () {
+const dataUrl = "https://foxforumsinfo.herokuapp.com/stories";
+//const dataUrl = "http://localhost:8080/stories";
 
-    let parsed = {};
+$(document).ready(function () {
 
     console.log("requesting... ");
 
     $.ajax({
-        url: "https://foxforumsinfo.herokuapp.com/stories",
+        url: dataUrl,
         error: function (req, exception) {
             console.log(req.statusText);
         }
-    }).then(function (data) {
-        parsed = JSON.parse(data);
-        var keys = _.keys(parsed)
+    }).then(function (jsonData) {
+        let data = JSON.parse(jsonData);
+        let keys = ["*All*"]
+            .concat(_.keys(data));
         let count = keys.length - 1;
         let unique = {};
         let active = {};
 
+        // find active stories
+        _.each(keys, function (cat) {
+            _.each(data[cat], function (item) {
+                item.section = cat;
+                if (item.hasComments) {
+                    active[item.url] = item;
+                }
+            });
+        });
+
         // add other buttons
         {
-            _.each(_.keys(parsed), function (i) {
+            _.each(keys, function (i) {
                 let button = $("<button/>");
-                button.text(i.replace(/_/g, ' '));
                 button.attr("class", 'tablinks');
+                let p = data[i];
+
+                if (i === '*All*') {
+                    p = active;
+                }
+
                 button.click(function (event) {
-                    onComplete(event, parsed[i]);
+                    onComplete(event, p, i);
                 });
+
                 button.appendTo($("#feeds"));
                 let commented = 0;
 
-                _.each(parsed[i], function (i) {
+                _.each(p, function (i) {
                     unique[i.url] = i;
                     if (i.hasComments) {
                         commented++;
-                        active[i.url] = i;
                     }
                 });
 
-                button.text(button.text() + " (" + commented + ")");
-            });
-        }
-
-        // set up all Active feeds button
-        {
-            let button = $("#feeds button").first();
-            button.attr("class", 'tablinks');
-            button.text(button.text() + " (" + _.keys(active).length + ")");
-
-            button.click(function (event) {
-                onComplete(event, active);
+                let text = i
+                .replace(/_/g, ' ')
+                .replace(/\*/g, '');
+                button.text(text + " (" + commented + ")");
             });
         }
 
         $('#stats').text(_.keys(unique).length + " stories, " + _.keys(active).length + " with comments");
 
-        $("#openinnewtab").click(function() {
+        $("#openinnewtab").click(function () {
             let openInNewTab = $("#openinnewtab").is(":checked");
             let elems = $("#result").find("a");
             if (openInNewTab) {
@@ -64,38 +73,52 @@ $(document).ready(function () {
         });
 
         // set current view to first page
-        $("button").first().click();        
+        $("button").first().click();
     });
 
 
 });
 
-function onComplete(event, stories) {
+function onComplete(event, stories, section) {
     let openInNewTab = $("#openinnewtab").is(":checked");
     $("#result").empty();
 
-    var sorted = [];
+    let sorted = [];
 
     sorted = _.sortBy(stories, function (n) {
-        return n.url;
-    });
+        return +moment(n.date);
+    }).reverse();
 
-    var div = $("<div class='tabcontent'></div>");
+    let div = $("<div class='tabcontent'></div>");
     $('#result').append(div);
-    var dateline = "";
+    let dateline = "";
 
     _.each(sorted, function (item) {
         if (item.url.length) {
-            var title = $('<p class="title">(' + item.title + ')</p>');
-            div.append(title);
+            let entry = $("<div class='entry'></div>");
+            entry.appendTo(div);
 
-            var line = $('<a>' + item.url + '</a>');
-            line.css("color", item.hasComments ? 'blue' : 'red')
-            line.attr('href', item.url);
+            let then = moment(item.date);
+            let tag = item.hasComments ? "✔️" : "❌";
+
+            let title = $('<h3 class="title">'  + '</div>');
+            title.appendTo(entry);
+
+            let a = $('<a>' + " " + item.title + '</a>');
+            a.css("color", item.hasComments ? 'blue' : 'red')
+            a.attr('href', item.url);
             if (openInNewTab) {
-                line.attr('target', '_blank');
+                a.attr('target', '_blank');
             }
-            div.append(line);
+            a.appendTo(title);
+
+            let section = item.section
+                .replace(/_/g, ' ')
+                .replace(/\*/g, '');
+            let ago = then.fromNow().replace(/a day/, "1 day");
+            let date = $('<div class="date">' + tag + " " + section + " - " + ago + '</div>');
+            date.appendTo(entry);
+
         } else {
             dateline = $('<p class="date">(' + item.title + ')</p>');
         }
