@@ -1,3 +1,5 @@
+const _ = require('underscore-node');
+
 // REST Service ------------------------------
 
 var port = process.env.PORT || 8080;
@@ -43,21 +45,28 @@ server.listen(port, function () {
 });
 
 // Feed Scanner  ------------------------------
-//var feedUrl = 'http://feeds.foxnews.com/foxnews/most-popular';
 
 var index = 0;
 
 function onMinute() {
   index = (index >= feeds.length) ? 0 : index;
-  FoxFeedScanner(feeds[index++]);
+  var feed = feeds[index++];
+  if (feed.name === '*Home_Page*') {
+    FoxPageScanner(feed, MainPageScanner);
+  } else {
+    if (feed.name === '*Todd_Starnes*') {
+      FoxPageScanner(feed, PersonPageScanner);
+    } else {
+      FoxFeedScanner(feed);
+    }
+  }
 }
+
 // once per minute plus one right away
-//setInterval(FoxFeedScanner, 60000, feedUrl);
 setTimeout(onMinute, 1000);
 setInterval(onMinute, 60000);
 
 function FoxFeedScanner(feed) {
-  console.log(feed.url);
   stories = [];
 
   var now = new Date();
@@ -81,7 +90,6 @@ function FoxFeedScanner(feed) {
   });
 
   feedReq.on('response', function (res) {
-    console.log(feed.url);
     var stream = this; // `this` is `req`, which is a stream
 
     if (res.statusCode !== 200) {
@@ -95,40 +103,6 @@ function FoxFeedScanner(feed) {
     // always handle errors
   });
 
-  const cheerio = require('cheerio');
-
-  function handleItem(item, total) {
-    var story_req = require('request');
-
-    story_req(item.guid, function (error, response, body) {
-
-      compvared++;
-
-      if (!error) {
-        const $ = cheerio.load(body);
-        const hasComments = $("#commenting").length > 0;
-
-        stories.push({
-          title: item.title,
-          date: item.date,
-          description: item.description,
-          url: item.guid,
-          hasComments: hasComments
-        });
-
-        console.log(compvared, ": ", hasComments, item.guid);
-
-        if (total == compvared) {
-          console.log("***" + now.getUTCDate() + " compvared ***");
-          data[feed.name] = stories;
-        }
-      } else {
-        console.log(compvared, ": ", error);
-      }
-    });
-  }
-
-  var compvared = 0;
   var items = [];
 
   feedparser.on('readable', function () {
@@ -143,16 +117,131 @@ function FoxFeedScanner(feed) {
     };
   });
 
+  feedparser.on('end', function () {
+    itemParser(feed, items);
+  });
+};
 
-  function myFunc(arg) {
-    clearTimeout(timer);
-    console.log(arg.length, " items");
-    for (var i = 0; i < arg.length; i++) {
-      var item = arg[i];
-      //console.log(item.guid);
-      handleItem(item, arg.length);
-    }
+function itemParser(feed, items) {
+  var compared = 0;
+  var stories = [];
+
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    handleItem(item, items.length);
   }
 
-  var timer = setTimeout(myFunc, 5000, items);
-};
+  function handleItem(item, total) {
+    let cheerio =  require('cheerio');
+    let moment =  require('moment');
+    var story_req = require('request');
+
+    story_req(item.guid, function (error, response, body) {
+      compared++;
+
+      if (!error) {
+        const $ = cheerio.load(body);
+        const hasComments = $("#commenting").length > 0;
+
+        var title = item.title;
+        if (!title) {
+          title = $("h1").last().text()
+        }
+
+        var date = item.date;
+        if (!date) {
+          date = moment($(".date").first().attr("datetime")).toISOString();
+        }
+
+        stories.push({
+          title: title,
+          date: date,
+          description: item.description,
+          url: item.guid,
+          hasComments: hasComments
+        });
+
+        //console.log(compared, ": ", hasComments, item.guid);
+
+        if (total == compared) {
+          console.log(feed.name, ": ", total + " stories");
+          data[feed.name] = stories;
+        }
+      } else {
+        console.log(compared, ": ", error);
+      }
+    });
+  }
+}
+
+function FoxPageScanner(feed, callback) {
+  let request = require('request');
+  let buffer = "";
+
+  request
+    .get(feed.url)
+    .on('response', function (response) {
+      response
+        .on('data', (chunk) => {
+          buffer += chunk;
+        })
+        .on('end', () => {
+          callback(feed, buffer);
+        })
+        .on('error', (err) => {
+          console.log(err)
+        });
+    })
+    .on('error', (err) => {
+      console.log(err)
+    });
+}
+
+function MainPageScanner(feed, body) {
+  let cheerio = require('cheerio');
+  stories = {};
+
+  const $ = cheerio.load(body);
+  var urls = $("a");
+  var stories = {};
+
+  _.each(urls, function (item) {
+    var url = $(item).attr("href");
+    if (url && url.indexOf("http://www.foxnews.com") >= 0 && url.indexOf("/2017/") > 0) {
+      stories[url] = {
+        title: undefined,
+        date: undefined,
+        description: "description",
+        guid: url,
+      };
+    }
+  });
+
+  var items = _.values(stories);
+  itemParser(feed, items);
+}
+
+function PersonPageScanner(feed, body) {
+  let cheerio = require('cheerio');
+  //let body = buffer.replace(/^\s*[\r\n]/gm, ""); // Buffer.concat(buffer).toString();
+  //var fs = require("fs");
+  //fs.writeFileSync('c:/temp/buffer.html', body);
+
+  const $ = cheerio.load(body);
+  var urls = $(".article-ct").find("a");
+  var stories = {};
+
+  _.each(urls, function (item) {
+    // TODO: handle case of absolute urls
+    var url = "http://www.foxnews.com" + $(item).attr("href");
+    stories[url] = {
+      title: undefined,
+      date: undefined,
+      description: "description",
+      guid: url,
+    };
+  });
+
+  var items = _.values(stories);
+  itemParser(feed, items);
+}

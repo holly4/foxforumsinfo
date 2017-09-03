@@ -2,6 +2,7 @@ exports.feeds = function () {
     // http://feeds.foxnews.com/foxnews/most-popular
     // http://feeds.foxnews.com/foxnews/most-popular
     _feeds = [
+        {name: "*Home_Page*", url: "http://www.foxnews.com"}, 
         {name: "Most_Popular", url: "http://feeds.foxnews.com/foxnews/most-popular"},
         {name: "Entertainment", url: "http://feeds.foxnews.com/foxnews/entertainment"},
         {name: "Health", url: "http://feeds.foxnews.com/foxnews/health"},
@@ -14,7 +15,8 @@ exports.feeds = function () {
         {name: "Travel", url: "http://feeds.foxnews.com/foxnews/internal/travel/mixed"},
         {name: "U.S.", url: "http://feeds.foxnews.com/foxnews/national"},
         {name: "Video", url: "http://feeds.foxnews.com/foxnews/video"},
-        {name: "World", url: "http://feeds.foxnews.com/foxnews/world"}
+        {name: "World", url: "http://feeds.foxnews.com/foxnews/world"},
+        {name: "*Todd_Starnes*", url: "http://www.foxnews.com/person/s/todd-starnes.html"},        
     ];
 
     return _feeds;
@@ -36,12 +38,7 @@ request(feedPage, function (error, response, body) {
             var a = $(_a);
             feeds.push( { name: a.text(), url : a.attr('data-url') } );
         });
-
-        console.log("feeds: " + feeds);
-        console.log(_.keys(feeds));
-        
-
     } else {
-        console.log(compvared, ": ", error);
+        console.log(feeds, ": ", error);
     }
 });
