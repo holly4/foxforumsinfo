@@ -1,5 +1,5 @@
-//const dataUrl = "https://foxforumsinfo.herokuapp.com/stories";
-const dataUrl = "http://localhost:8080/stories";
+const dataUrl = "https://foxforumsinfo.herokuapp.com/stories";
+//const dataUrl = "http://localhost:8080/stories";
 
 $(document).ready(function () {
 
