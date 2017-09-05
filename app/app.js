@@ -32,7 +32,7 @@ $(document).ready(function () {
         {
             _.each(keys, function (i) {
                 let stories = i === '*All*' ? active : data[i];
-                if (stories.length > 0) {
+                if (_.size(stories) > 0) {
                     let button = $("<button/>");
                     button.attr("class", 'tablinks');
 
