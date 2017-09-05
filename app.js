@@ -5,9 +5,11 @@ const _ = require('underscore-node');
 var port = process.env.PORT || 8080;
 
 var restify = require('restify');
-var data = {};
-
 var feeds = require('./feeds').feeds();
+var data = {};
+_.each(feeds, function(feed){
+  data[feed.name] = [];
+});
 
 function respond(req, res, next) {
   res.send(JSON.stringify(data));
@@ -67,18 +69,6 @@ setTimeout(onMinute, 1000);
 setInterval(onMinute, 60000);
 
 function FoxFeedScanner(feed) {
-  stories = [];
-
-  var now = new Date();
-
-  stories.push({
-    title: now.toISOString(),
-    date: now.toISOString(),
-    description: "",
-    url: "",
-    hasComments: false
-  });
-
   var FeedParser = require('feedparser');
   var request = require('request'); // for fetching the feed
 
@@ -165,6 +155,16 @@ function itemParser(feed, items) {
 
         if (total == compared) {
           console.log(feed.name, ": ", total + " stories");
+          var now = new Date();
+          
+            stories.push({
+              title: now.toISOString(),
+              date: now.toISOString(),
+              description: "",
+              url: "",
+              hasComments: false
+            });
+                    
           data[feed.name] = stories;
         }
       } else {

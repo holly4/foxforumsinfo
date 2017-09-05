@@ -1,5 +1,5 @@
-const dataUrl = "https://foxforumsinfo.herokuapp.com/stories";
-//const dataUrl = "http://localhost:8080/stories";
+//const dataUrl = "https://foxforumsinfo.herokuapp.com/stories";
+const dataUrl = "http://localhost:8080/stories";
 
 $(document).ready(function () {
 
@@ -31,32 +31,30 @@ $(document).ready(function () {
         // add other buttons
         {
             _.each(keys, function (i) {
-                let button = $("<button/>");
-                button.attr("class", 'tablinks');
-                let p = data[i];
+                let stories = i === '*All*' ? active : data[i];
+                if (stories.length > 0) {
+                    let button = $("<button/>");
+                    button.attr("class", 'tablinks');
 
-                if (i === '*All*') {
-                    p = active;
+                    button.click(function (event) {
+                        onComplete(event, stories, i);
+                    });
+
+                    button.appendTo($("#feeds"));
+                    let commented = 0;
+
+                    _.each(stories, function (i) {
+                        unique[i.url] = i;
+                        if (i.hasComments) {
+                            commented++;
+                        }
+                    });
+
+                    let text = i
+                        .replace(/_/g, ' ')
+                        .replace(/\*/g, '');
+                    button.text(text + " (" + commented + ")");
                 }
-
-                button.click(function (event) {
-                    onComplete(event, p, i);
-                });
-
-                button.appendTo($("#feeds"));
-                let commented = 0;
-
-                _.each(p, function (i) {
-                    unique[i.url] = i;
-                    if (i.hasComments) {
-                        commented++;
-                    }
-                });
-
-                let text = i
-                .replace(/_/g, ' ')
-                .replace(/\*/g, '');
-                button.text(text + " (" + commented + ")");
             });
         }
 
@@ -101,7 +99,7 @@ function onComplete(event, stories, section) {
             let then = moment(item.date);
             let tag = item.hasComments ? "✔️" : "❌";
 
-            let title = $('<h3 class="title">'  + '</div>');
+            let title = $('<h3 class="title">' + '</div>');
             title.appendTo(entry);
 
             let a = $('<a>' + " " + item.title + '</a>');
